@@ -1,5 +1,6 @@
 
 
+
 #include <AnalogSwitch.h>
 #include <RODoser.h>
 #include <Servo.h>
@@ -17,21 +18,23 @@ using namespace Utils;
 
 //vector<RODoser> _dosers;
 Servo aServo;
-int _doserPin = 4;
+int _doserPin = 9;
 int _doserShakes = 2;
 
 RODoser _doser(aServo, _doserPin, _doserShakes);
-int _doserPwrSigPin = 12; //relay signal pin.
+//int _doserPwrSigPin = 6; //relay signal pin.
 
 //---End Dosers---
 
 int _floatSwitchSigPin = 1;	//anolog input
+int _floatSwitchMax = 1023;
 //int _floatSwitchReading;           // the current reading from the input pin
 
 
 void setup() {
-	pinMode(_doserPwrSigPin, OUTPUT); //to send relay signal
-	//pinMode(_floatSwitchSigPin, INPUT); //receive switch signal
+
+	pinMode(13, OUTPUT);//led
+	pinMode(_floatSwitchSigPin, INPUT); //receive switch signal
 	// initialize serial:
 	Serial.begin(9600);
 	//Wait for four seconds or till data is available on serial, whichever occurs first.
@@ -52,15 +55,16 @@ void loop() {
 	bool runMotor = ServoMotor::ShouldRunMotor(incomingByte);
 	bool runMotorDemo = ServoMotor::ShouldRunMotorDemo(incomingByte);
 
-	runMotor = AnalogSwitch::IsOn(_floatSwitchSigPin);
+	runMotor = AnalogSwitch::IsOn(_floatSwitchSigPin, _floatSwitchMax);
 
 	if (runMotor) {
-		SerialExt::Print("Signaling Relay ON, pin: ", _doserPwrSigPin);
-		digitalWrite(_doserPwrSigPin, LOW); //to send relay signal
+		digitalWrite(13, HIGH);
 
 		_doser.Dose();
-		SerialExt::Print("Signaling Relay OFF, pin: ", _doserPwrSigPin);
-		digitalWrite(_doserPwrSigPin, HIGH);
+		digitalWrite(13, LOW);
+
+		SerialExt::Print("Dose complete wiating 6 hours for tank to fill.");
+		delay(21600000); //waiting 6 hours for tank to fill
 	}
 	else if (runMotorDemo)
 	{
@@ -69,15 +73,5 @@ void loop() {
 		RODoser::RunDemo(dosers);
 	}
 	delay(1000); //wait for a sec before checking for signal again.
-	delay(7000); //for testing
+	//delay(2000); //for testing
 }
-
-//bool IsOn(){
-//	//read switch
-//	_floatSwitchReading = analogRead(_floatSwitchSigPin);
-//	SerialExt::Print("Switch Val: ", _floatSwitchReading);
-//	if (_floatSwitchReading > 900){
-//		return true;
-//	}
-//	return false;
-//}
