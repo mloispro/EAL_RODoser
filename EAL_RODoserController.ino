@@ -1,5 +1,7 @@
-//#include <RunScheduleExt.h>
-#include <TimerExt.h>
+
+//#include <TimeLib.h>
+//#include <Time.h>
+//#include <Wire.h>
 #include <SimpleTimer.h>
 
 #include <AnalogSwitch.h>
@@ -11,6 +13,8 @@ using namespace std;
 
 #include <SerialExt.h>
 #include <ServoMotor.h>
+//#include <DigitalTime.h>
+#include <RTCExt.h>
 using namespace Utils;
 
 
@@ -35,9 +39,14 @@ RODoser _doser(aServo, _doserPin, _doserShakes, _mofsetPin, _runEverySeconds, _f
 SimpleTimer _timer;
 
 void setup() {
-	SerialExt::Init();
+	//SerialExt::Init(); <-have to init serial in sketch
+
+	Serial.begin(9600);
+	while (Serial.available() == 0 && millis() < 2000); // wait until Arduino Serial Monitor opens
+	RTCExt::Init();
+
 	_timer.setInterval(4000, RunDoser);
-	_timer.setInterval(10000, PrintRuntime);
+	//_timer.setInterval(10000, PrintRuntime);
 }
 
 //int _incomingByte = 0;  // a string to hold incoming data from serial com.
@@ -51,13 +60,14 @@ void RunDoser(){
 		//incomingByte = 49; //on input so run.
 		SerialExt::Print("Serial Input: ", incomingByte);
 	}
-	
+
+	//1 to run, 2 to run demo
 	bool runMotor = ServoMotor::ShouldRunMotorBySerialInput(incomingByte);
 	bool runMotorDemo = ServoMotor::ShouldRunMotorDemo(incomingByte);
 
 	if (!runMotor && !runMotorDemo){
 		
-		runMotor = _doser.ShouldRunMotor();
+		runMotor = _doser.ShouldRunMotor(true);
 		SerialExt::Debug("runMotor: ", runMotor);
 	}
 
@@ -70,10 +80,8 @@ void RunDoser(){
 		dosers.push_back(_doser);
 		RODoser::RunDemo(dosers);
 	}
-	//delay(1000); //wait for a sec before checking for signal again.
-	//delay(2000); //for testing
 }
 
-void PrintRuntime(){
-	TimerExt::PrintDigitalRuntime();
-}
+//void PrintRuntime(){
+//	RTCExt::PrintDigitalRuntime();
+//}
