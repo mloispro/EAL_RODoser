@@ -30,9 +30,10 @@ int _floatSwitchMax = 1023;
 Servo aServo;
 AnalogSwitch _floatSwitch(_floatSwitchSigPin);
 int _doserShakes = 2;
-int _runEverySeconds = 20;
+long _runEverySeconds = 36000; //<- dont use multiplication will get an overflow
 
-RODoser _doser(aServo, _doserPin, _doserShakes, _mofsetPin, _runEverySeconds, _floatSwitch);
+
+RODoser _doser;
 
 //---End Dosers---
 
@@ -43,7 +44,9 @@ void setup() {
 
 	Serial.begin(9600);
 	while (Serial.available() == 0 && millis() < 2000); // wait until Arduino Serial Monitor opens
-	RTCExt::Init();
+	//RTCExt::Init();
+	_doser = RODoser(aServo, _doserPin, _doserShakes, _mofsetPin, _runEverySeconds, _floatSwitch);
+	_doser.PrintSerialInstructions();
 
 	_timer.setInterval(4000, RunDoser);
 	//_timer.setInterval(10000, PrintRuntime);
@@ -55,6 +58,7 @@ void loop() {
 }
 
 void RunDoser(){
+	SerialExt::Print("_runEverySeconds",_runEverySeconds);
 	int incomingByte = SerialExt::Read();
 	if (incomingByte > 0){
 		//incomingByte = 49; //on input so run.
