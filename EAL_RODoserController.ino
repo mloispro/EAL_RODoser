@@ -15,6 +15,7 @@ using namespace std;
 #include <ServoMotor.h>
 //#include <DigitalTime.h>
 #include <RTCExt.h>
+#include <PinValMemoryExt.h>
 using namespace Utils;
 
 
@@ -30,7 +31,8 @@ int _floatSwitchMax = 1023;
 Servo aServo;
 AnalogSwitch _floatSwitch(_floatSwitchSigPin);
 int _doserShakes = 2;
-long _runEverySeconds = 36000; //<- dont use multiplication will get an overflow
+//long _runEverySeconds = 18000; //<- dont use multiplication will get an overflow
+long _runEverySeconds = 30; //for testing
 
 
 RODoser _doser;
@@ -50,6 +52,7 @@ void setup() {
 
 	_timer.setInterval(4000, RunDoser);
 	//_timer.setInterval(10000, PrintRuntime);
+	//SetRTCTime();
 }
 
 //int _incomingByte = 0;  // a string to hold incoming data from serial com.
@@ -58,21 +61,21 @@ void loop() {
 }
 
 void RunDoser(){
-	SerialExt::Print("_runEverySeconds",_runEverySeconds);
-	int incomingByte = SerialExt::Read();
-	if (incomingByte > 0){
-		//incomingByte = 49; //on input so run.
-		SerialExt::Print("Serial Input: ", incomingByte);
+	//SerialExt::Debug("_runEverySeconds ",_runEverySeconds);
+	
+	int incomingNum = SerialExt::Read();
+	if (incomingNum > 0){
+		bool processed = _doser.ProcessSerialInput(incomingNum);
 	}
 
 	//1 to run, 2 to run demo
-	bool runMotor = ServoMotor::ShouldRunMotorBySerialInput(incomingByte);
-	bool runMotorDemo = ServoMotor::ShouldRunMotorDemo(incomingByte);
+	bool runMotor = ServoMotor::ShouldRunMotorBySerialInput(incomingNum);
+	bool runMotorDemo = ServoMotor::ShouldRunMotorDemo(incomingNum);
 
 	if (!runMotor && !runMotorDemo){
 		
 		runMotor = _doser.ShouldRunMotor(true);
-		SerialExt::Debug("runMotor: ", runMotor);
+		//SerialExt::Debug("runMotor: ", runMotor);
 	}
 
 	if (runMotor) {
@@ -86,6 +89,10 @@ void RunDoser(){
 	}
 }
 
+
+void SetRTCTime(){
+	RTCExt::SetRTCTime(8, 59, 0, 9, 3, 2016);
+}
 //void PrintRuntime(){
 //	RTCExt::PrintDigitalRuntime();
 //}
