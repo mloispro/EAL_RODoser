@@ -21,18 +21,18 @@ using namespace Utils;
 
 // pin listing
 int _doserPin = 9;
-int _mofsetPin = 8;
-int _floatSwitchSigPin = 0;	//anolog input
+//int _relayPin = 8;
+int _floatSwitchSigPin = 1;	//anolog input
 
 //---Dosers---
 int _floatSwitchMax = 1023;
 
 //vector<RODoser> _dosers;
+long _runEverySeconds = 22000; //<- dont use multiplication will get an overflow
+//long _runEverySeconds = 30; //for testing
 Servo aServo;
 AnalogSwitch _floatSwitch(_floatSwitchSigPin);
 int _doserShakes = 2;
-//long _runEverySeconds = 18000; //<- dont use multiplication will get an overflow
-long _runEverySeconds = 30; //for testing
 
 
 RODoser _doser;
@@ -47,7 +47,8 @@ void setup() {
 	Serial.begin(9600);
 	while (Serial.available() == 0 && millis() < 2000); // wait until Arduino Serial Monitor opens
 	//RTCExt::Init();
-	_doser = RODoser(aServo, _doserPin, _doserShakes, _mofsetPin, _runEverySeconds, _floatSwitch);
+	//_doser = RODoser(aServo, _doserPin, _doserShakes, _mofsetPin, _runEverySeconds, _floatSwitch);
+	_doser = RODoser(aServo, _doserPin, _doserShakes, _runEverySeconds, _floatSwitch);
 	_doser.PrintSerialInstructions();
 
 	_timer.setInterval(4000, RunDoser);
@@ -79,6 +80,8 @@ void RunDoser(){
 	}
 
 	if (runMotor) {
+		SerialExt::Debug("switchIsOn: ", _doser.TheSwitch.IsOn());
+		SerialExt::Debug("switchVal: ", _doser.TheSwitch.SwitchReading);
 		_doser.Dose();
 	}
 	else if (runMotorDemo)
@@ -89,9 +92,8 @@ void RunDoser(){
 	}
 }
 
-
 void SetRTCTime(){
-	RTCExt::SetRTCTime(8, 59, 0, 9, 3, 2016);
+	RTCExt::SetRTCTime(2, 35, 0, 18, 3, 2016);
 }
 //void PrintRuntime(){
 //	RTCExt::PrintDigitalRuntime();
